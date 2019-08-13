@@ -16,24 +16,21 @@ from sklearn.utils.multiclass import unique_labels
 
 # since we will be testing many models, let's create a function to train, evaluate, and save statistics about each model 
 # my_model: the keras model to train
-def train_model(my_model): 
-    
-    # compile the model
-    my_model.compile(loss='mean_squared_error',
-        optimizer=optimizers.Adam(),
-        metrics=['acc'])
+def train_model(my_model, imgs_train, labels_train, imgs_test, labels_test ): 
     
     # create keras callbacks 
     es = EarlyStopping(monitor='val_loss', patience=5) 
-        
+    cp_callback = tf.keras.callbacks.ModelCheckpoint("data/weights/file",
+                                                 save_weights_only=True,
+                                                 verbose=1)
     # train the model
     history = my_model.fit(
         imgs_train,
         labels_train, 
-        validation_data=(imgs_val,labels_val), 
+        validation_data=(imgs_test,labels_test), 
         batch_size=32, 
         epochs=25, 
-        callbacks=[es] 
+        callbacks=[es, cp_callback] 
     )
     
     # calculate confusion matrix 
@@ -139,5 +136,11 @@ def create_custom_model():
 	# freeze the layers that came in the pre-trained model
 	for layer in pretrained_model.layers:
 	    layer.trainable = False
+        
+     # compile the model
+	custom_model.compile(loss='mean_squared_error',
+        optimizer=optimizers.Adam(),
+        metrics=['acc'])
+    
 
 	return custom_model
